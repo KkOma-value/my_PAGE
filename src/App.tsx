@@ -112,7 +112,7 @@ export default function App() {
           )}
 
           {activeTab === "discover" && (
-            <DiscoverRankings onQuickCheckIn={handleQuickCheckIn} />
+            <DiscoverRankings onQuickCheckIn={handleQuickCheckIn} sips={sips} />
           )}
 
           {activeTab === "profile" && (
