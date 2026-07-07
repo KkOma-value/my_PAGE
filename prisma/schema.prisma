@@ -1,0 +1,110 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User: minimal for MVP, can integrate Clerk/NextAuth later
+model User {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  checkIns  CheckIn[]
+  likes     Like[]
+}
+
+// Category: AI-dynamic, supports hierarchy (parentId for sub-categories)
+model Category {
+  id       String     @id @default(cuid())
+  name     String     @unique // machine name e.g. beverage, food, fashion, pet
+  label    String     // Chinese display name
+  parentId String?    // parent category for hierarchy
+  parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryHierarchy")
+  drinks   Drink[]
+}
+
+// Brand: Heytea, Luckin, Starbucks, etc.
+model Brand {
+  id      String  @id @default(cuid())
+  name    String  @unique
+  logoUrl String?
+  drinks  Drink[]
+}
+
+// Drink SKU: specific product
+model Drink {
+  id         String    @id @default(cuid())
+  name       String
+  brandId    String
+  categoryId String
+  brand      Brand     @relation(fields: [brandId], references: [id])
+  category   Category  @relation(fields: [categoryId], references: [id])
+  checkIns   CheckIn[]
+
+  @@unique([brandId, name])
+}
+
+// City: pre-populated reference data
+model City {
+  id       String    @id @default(cuid())
+  name     String
+  province String
+  code     String    @unique // pinyin slug or administrative code
+  checkIns CheckIn[]
+}
+
+// Check-in record
+model CheckIn {
+  id           String   @id @default(cuid())
+  userId       String
+  drinkId      String
+  cityId       String
+  imageUrl     String
+  cardUrl      String?
+  categoryId   String?
+  caption      String?
+  aiSuggested  Boolean  @default(false)
+  aiConfidence Float?
+  lat          Float?   // GPS latitude
+  lng          Float?   // GPS longitude
+  locationName String?  // reverse-geocoded place name (e.g. "徐汇区永嘉路")
+  createdAt    DateTime @default(now())
+  date         String   // YYYY-MM-DD for daily aggregation
+
+  user  User  @relation(fields: [userId], references: [id])
+  drink Drink @relation(fields: [drinkId], references: [id])
+  city  City  @relation(fields: [cityId], references: [id])
+  likes Like[]
+}
+
+// Like (affects ranking sort)
+model Like {
+  id        String   @id @default(cuid())
+  userId    String
+  checkInId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id])
+  checkIn CheckIn @relation(fields: [checkInId], references: [id])
+
+  @@unique([userId, checkInId])
+}
+
+// Season tip (editorial / semi-automated)
+// NOTE: SQLite does not support String[]. drinkIds stores comma-separated Drink IDs.
+model SeasonTip {
+  id          String   @id @default(cuid())
+  month       Int      // 1-12
+  title       String
+  description String?
+  imageUrl    String?
+  drinkIds    String   // comma-separated Drink IDs (SQLite limitation)
+  createdAt   DateTime @default(now())
+}

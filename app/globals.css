@@ -1,0 +1,210 @@
+@import "tailwindcss";
+
+/* ================================================================
+   Design Tokens - City Drink (Tea Check)
+   Source: output/city-drink-uiux.md + SipNotes brand palette
+   ================================================================ */
+
+:root {
+  /* ---- Original City Drink tokens ---- */
+  --background: #FFFFFF;
+  --background-soft: #F8F7F5;
+  --background-muted: #F0EEEA;
+
+  --foreground: #1C1917;
+  --foreground-muted: #78716C;
+  --foreground-subtle: #A8A29E;
+
+  --primary: #92400E;
+  --primary-foreground: #FFFFFF;
+  --primary-soft: #FDF2E9;
+
+  --category-milk-tea: #D97706;
+  --category-coffee: #57534E;
+  --category-fruit-tea: #059669;
+  --category-other: #7C3AED;
+
+  --success: #16A34A;
+  --warning: #EAB308;
+  --error: #DC2626;
+
+  --border: #E7E5E4;
+  --border-strong: #D6D3D1;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 20px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+  /* ---- SipNotes brand palette ---- */
+  --brand-primary: #43664d;
+  --brand-primary-container: #84a98c;
+  --brand-secondary: #79573f;
+  --brand-secondary-container: #ffd1b3;
+  --brand-tertiary: #685e31;
+  --brand-tertiary-container: #aca06c;
+  --brand-bg: #faf9f5;
+  --brand-surface: #eeeeea;
+  --brand-surface-low: #f4f4f0;
+  --brand-text: #1a1c1a;
+  --brand-text-muted: #424842;
+  --brand-outline: #727972;
+}
+
+@theme inline {
+  /* Original tokens */
+  --color-background: var(--background);
+  --color-background-soft: var(--background-soft);
+  --color-background-muted: var(--background-muted);
+
+  --color-foreground: var(--foreground);
+  --color-foreground-muted: var(--foreground-muted);
+  --color-foreground-subtle: var(--foreground-subtle);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-soft: var(--primary-soft);
+
+  --color-category-milk-tea: var(--category-milk-tea);
+  --color-category-coffee: var(--category-coffee);
+  --color-category-fruit-tea: var(--category-fruit-tea);
+  --color-category-other: var(--category-other);
+
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  /* SipNotes brand tokens */
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-primary-container: var(--brand-primary-container);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-secondary-container: var(--brand-secondary-container);
+  --color-brand-tertiary: var(--brand-tertiary);
+  --color-brand-tertiary-container: var(--brand-tertiary-container);
+  --color-brand-bg: var(--brand-bg);
+  --color-brand-surface: var(--brand-surface);
+  --color-brand-surface-low: var(--brand-surface-low);
+  --color-brand-text: var(--brand-text);
+  --color-brand-text-muted: var(--brand-text-muted);
+  --color-brand-outline: var(--brand-outline);
+
+  --font-sans: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", "Plus Jakarta Sans", sans-serif;
+  --font-mono: "SF Mono", "Menlo", "Consolas", "JetBrains Mono", monospace;
+  --font-display: "Plus Jakarta Sans", "PingFang SC", "Noto Sans SC", sans-serif;
+
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+}
+
+/* ================================================================
+   Base styles
+   ================================================================ */
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track { background: var(--background-soft); }
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-sm);
+}
+
+/* ================================================================
+   SipNotes component styles
+   ================================================================ */
+
+.polaroid {
+  background-color: white;
+  padding: 8px 8px 24px 8px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(121, 87, 63, 0.08);
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+.polaroid:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(121, 87, 63, 0.12);
+}
+
+.map-container {
+  border-radius: 1.5rem;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(121, 87, 63, 0.08);
+  position: relative;
+}
+
+.map-overlay {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 1rem;
+  box-shadow: 0 4px 12px rgba(121, 87, 63, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.hide-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Map pin styles */
+.map-pin {
+  width: 24px;
+  height: 32px;
+  background-color: #43664d;
+  border-radius: 12px 12px 12px 0;
+  transform: rotate(-45deg);
+  position: absolute;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+}
+.map-pin:hover {
+  transform: rotate(-45deg) scale(1.2);
+  z-index: 30;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.3);
+}
+.map-pin::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  background-color: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 7px;
+  left: 7px;
+}
+.map-pin-coffee { background-color: #79573f; }
+.map-pin-tea { background-color: #685e31; }
+.map-pin-active {
+  animation: pulse-pin 1.5s infinite alternate;
+  box-shadow: 0 0 12px rgba(67, 102, 77, 0.6);
+  z-index: 30;
+}
+
+@keyframes pulse-pin {
+  0% { box-shadow: 0 0 4px rgba(67, 102, 77, 0.4); }
+  100% { box-shadow: 0 0 16px rgba(67, 102, 77, 0.8), 2px 2px 6px rgba(0, 0, 0, 0.25); }
+}
+
+/* Safe area for mobile bottom nav */
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }

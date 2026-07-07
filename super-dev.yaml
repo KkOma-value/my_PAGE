@@ -1,0 +1,12 @@
+name: city-drink
+description: 城市饮品打卡 / 地域季节趋势推荐应用
+platform: web
+frontend: next
+backend: node
+database: sqlite
+language: typescript
+framework: nextjs
+orm: prisma
+ai_provider: openai
+version: 0.1.0
+super_dev_version: 2.4.0
