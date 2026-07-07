@@ -1,0 +1,6 @@
+{
+  "name": "SipNotes",
+  "description": "SipNotes 是一款美观的个人饮品记录与足迹地图应用，记录您在全国各地的美味探索足迹与评测。",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
