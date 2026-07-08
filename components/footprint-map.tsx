@@ -153,7 +153,6 @@ export default function FootprintMap({ sips, onDeleteSip, onCheckInClick }: Foot
           if (!hasLogs) return null;
 
           const isSelected = selectedCity?.toLowerCase() === city.name.toLowerCase();
-          const isCoffeeTop = citySips[0]?.category === DrinkCategory.Coffee || citySips[0]?.category === DrinkCategory.PourOver;
           const isTeaTop = citySips[0]?.category === DrinkCategory.Tea || citySips[0]?.category === DrinkCategory.FruitTea;
 
           let pinColorClass = "map-pin-coffee"; // default roast brown
@@ -397,7 +396,7 @@ export default function FootprintMap({ sips, onDeleteSip, onCheckInClick }: Foot
                     品饮体验心得：
                   </span>
                   <p className="text-xs text-brand-text-muted leading-relaxed font-sans font-medium italic">
-                    "{activeDetailSip.comment}"
+                    「{activeDetailSip.comment}」
                   </p>
                 </div>
               )}

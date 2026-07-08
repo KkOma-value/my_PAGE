@@ -7,7 +7,6 @@
 
 import React, { useState } from "react";
 import { 
-  Map, 
   ChevronDown, 
   Flame, 
   TrendingUp, 
@@ -21,8 +20,11 @@ import {
   Leaf, 
   Snowflake,
   Coffee,
-  CheckCircle2,
-  HelpCircle
+  MapPin,
+  Building2,
+  Gift,
+  BarChart3,
+  LineChart
 } from "lucide-react";
 import { SipRecord, DrinkCategory } from "@/types";
 import { CITIES, CITY_RANKINGS } from "../external/my_PAGE/src/data";
@@ -391,20 +393,33 @@ export default function DiscoverRankings({ onQuickCheckIn, sips = [] }: Discover
   const getPersonalBadgeInfo = (cat: DrinkCategory) => {
     switch (cat) {
       case DrinkCategory.Coffee:
-        return { badge: "☕️ 重度咖啡成瘾者", desc: "您钟爱清香微苦、坚果可可味十足的精制手磨或香浓拿铁咖啡，提神又饱含质感。" };
+        return { badge: "重度咖啡成瘾者", desc: "您钟爱清香微苦、坚果可可味十足的精制手磨或香浓拿铁咖啡，提神又饱含质感。" };
       case DrinkCategory.Matcha:
-        return { badge: "🍵 抹茶治愈系学家", desc: "您深深迷恋那一抹翠绿，对独特的草本微涩、浓郁海苔风味欲罢不能。" };
+        return { badge: "抹茶治愈系学家", desc: "您深深迷恋那一抹翠绿，对独特的草本微涩、浓郁海苔风味欲罢不能。" };
       case DrinkCategory.Tea:
-        return { badge: "🎋 东方禅意茶客", desc: "您钟情于山野气息、天然岩韵的高山原叶冷萃或盖碗中慢跑出来的传统名茶。" };
+        return { badge: "东方禅意茶客", desc: "您钟情于山野气息、天然岩韵的高山原叶冷萃或盖碗中慢跑出来的传统名茶。" };
       case DrinkCategory.FruitTea:
-        return { badge: "🍓 鲜活果味探险家", desc: "您热衷于爆汁水果与清甜花香在舌尖的猛烈撞击，活力无限，阳光消暑。" };
+        return { badge: "鲜活果味探险家", desc: "您热衷于爆汁水果与清甜花香在舌尖的猛烈撞击，活力无限，阳光消暑。" };
       case DrinkCategory.MilkTea:
-        return { badge: "🥛 快乐奶茶守护者", desc: "温润顺滑的牛乳遇上持久悠长红绿茶底，带给您满满的能量和日常小确幸。" };
+        return { badge: "快乐奶茶守护者", desc: "温润顺滑的牛乳遇上持久悠长红绿茶底，带给您满满的能量和日常小确幸。" };
       case DrinkCategory.PourOver:
-        return { badge: "🫖 精品手冲极客", desc: "您是绝对的品质玩家，追求单品咖啡豆最干净本真 of 花香果酸，手冲仪式感满分。" };
+        return { badge: "精品手冲极客", desc: "您是绝对的品质玩家，追求单品咖啡豆最干净本真 of 花香果酸，手冲仪式感满分。" };
       default:
-        return { badge: "🌟 寻味探索大师", desc: "您拥有一条极富探险精神 of 多元化味蕾，每一种精彩 of 特色饮品都想品味一番。" };
+        return { badge: "寻味探索大师", desc: "您拥有一条极富探险精神 of 多元化味蕾，每一种精彩 of 特色饮品都想品味一番。" };
     }
+  };
+
+  const renderCategoryIcon = (cat: DrinkCategory, className = "w-4 h-4") => {
+    if (cat === DrinkCategory.Coffee || cat === DrinkCategory.PourOver) {
+      return <Coffee className={className} />;
+    }
+    if (cat === DrinkCategory.Matcha || cat === DrinkCategory.Tea || cat === DrinkCategory.FruitTea) {
+      return <Leaf className={className} />;
+    }
+    if (cat === DrinkCategory.MilkTea) {
+      return <Heart className={className} />;
+    }
+    return <Sparkles className={className} />;
   };
 
   return (
@@ -529,7 +544,7 @@ export default function DiscoverRankings({ onQuickCheckIn, sips = [] }: Discover
 
           {/* Specialties Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {getCitySpecials(selectedCity).map((item, idx) => (
+            {getCitySpecials(selectedCity).map((item) => (
               <div 
                 key={item.drinkName}
                 className="bg-white border border-brand-surface rounded-3xl p-5 shadow-[0_4px_16px_rgba(121,87,63,0.04)] hover:shadow-lg transition-all duration-300 flex flex-col sm:flex-row gap-5 relative group"
@@ -551,8 +566,9 @@ export default function DiscoverRankings({ onQuickCheckIn, sips = [] }: Discover
                     <h3 className="text-lg font-display font-extrabold text-brand-text leading-tight">
                       {item.drinkName}
                     </h3>
-                    <p className="text-xs text-brand-primary font-bold">
-                      📍 {item.shopName}
+                    <p className="text-xs text-brand-primary font-bold flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5" />
+                      {item.shopName}
                     </p>
                     <p className="text-xs text-brand-text-muted font-sans font-medium line-clamp-3">
                       {item.description}
@@ -635,7 +651,7 @@ export default function DiscoverRankings({ onQuickCheckIn, sips = [] }: Discover
           {/* Season Button Group Selector */}
           <div className="flex justify-center gap-2 max-w-sm mx-auto">
             {(["Spring", "Summer", "Autumn", "Winter"] as const).map((season) => {
-              const labelMap = { Spring: "🌸 迎春", Summer: "☀️ 盛夏", Autumn: "🍁 金秋", Winter: "❄️ 暖冬" };
+              const labelMap = { Spring: "迎春", Summer: "盛夏", Autumn: "金秋", Winter: "暖冬" };
               const currentMonth = new Date().getMonth();
               const isCurrentSeason = 
                 (season === "Spring" && currentMonth >= 2 && currentMonth <= 4) ||
@@ -672,10 +688,10 @@ export default function DiscoverRankings({ onQuickCheckIn, sips = [] }: Discover
             {selectedSeason === "Winter" && <Snowflake className="w-5 h-5 text-sky-500 shrink-0" />}
             <div className="text-xs">
               <span className="font-bold text-brand-text block">
-                {selectedSeason === "Summer" && "💡 酷暑当前，消夏冰爽茶饮大赏："}
-                {selectedSeason === "Spring" && "🌸 万物新生，春季清心嫩芽："}
-                {selectedSeason === "Autumn" && "🍁 金风渐爽，秋季温润酒酿："}
-                {selectedSeason === "Winter" && "❄️ 瑞雪兆丰，冬季御寒暖身红茶："}
+                {selectedSeason === "Summer" && "酷暑当前，消夏冰爽茶饮大赏："}
+                {selectedSeason === "Spring" && "万物新生，春季清心嫩芽："}
+                {selectedSeason === "Autumn" && "金风渐爽，秋季温润酒酿："}
+                {selectedSeason === "Winter" && "瑞雪兆丰，冬季御寒暖身红茶："}
               </span>
               <p className="text-brand-text-muted mt-0.5">
                 精选极富滋味和契合当季微气候的推荐组合，滋润身心。
@@ -704,8 +720,9 @@ export default function DiscoverRankings({ onQuickCheckIn, sips = [] }: Discover
                     <h3 className="text-sm font-extrabold text-brand-text leading-snug group-hover:text-brand-primary transition-colors">
                       {item.drinkName}
                     </h3>
-                    <p className="text-[11px] text-brand-text-muted font-bold">
-                      🏢 {item.shopName}
+                    <p className="text-[11px] text-brand-text-muted font-bold flex items-center gap-1">
+                      <Building2 className="w-3 h-3" />
+                      {item.shopName}
                     </p>
                     <p className="text-[11px] text-brand-text-muted line-clamp-2">
                       {item.description}
@@ -761,8 +778,9 @@ export default function DiscoverRankings({ onQuickCheckIn, sips = [] }: Discover
 
               {/* Onboarding flight recommendations */}
               <div className="bg-brand-surface-low/50 p-4 rounded-2xl text-left border border-brand-surface/40">
-                <span className="text-[10px] font-extrabold text-brand-secondary uppercase block mb-3">
-                  🎁 新手尝鲜推荐首发打卡（一键记录）：
+                <span className="text-[10px] font-extrabold text-brand-secondary uppercase mb-3 flex items-center gap-1.5">
+                  <Gift className="w-3.5 h-3.5" />
+                  新手尝鲜推荐首发打卡（一键记录）：
                 </span>
                 <div className="space-y-3">
                   {[
@@ -796,16 +814,12 @@ export default function DiscoverRankings({ onQuickCheckIn, sips = [] }: Discover
                 <div className="md:col-span-2 bg-gradient-to-br from-brand-primary/10 to-brand-secondary/10 border border-brand-primary/20 rounded-3xl p-6 text-center flex flex-col justify-between shadow-sm relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-24 h-24 bg-white/20 rounded-full blur-2xl pointer-events-none" />
                   <div className="space-y-4">
-                    <span className="text-[10px] font-extrabold text-brand-secondary uppercase tracking-widest block">
-                      🧬 您的专属饮品基因
+                    <span className="text-[10px] font-extrabold text-brand-secondary uppercase tracking-widest flex items-center justify-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      您的专属饮品基因
                     </span>
                     <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto shadow-md border-4 border-white">
-                      {(favoriteCategory as string) === DrinkCategory.Coffee && <Coffee className="w-10 h-10 text-brand-secondary" />}
-                      {(favoriteCategory as string) === DrinkCategory.Matcha && <span className="text-3xl">🍵</span>}
-                      {(favoriteCategory as string) === DrinkCategory.Tea && <span className="text-3xl">🎋</span>}
-                      {(favoriteCategory as string) === DrinkCategory.FruitTea && <span className="text-3xl">🍓</span>}
-                      {(favoriteCategory as string) === DrinkCategory.MilkTea && <span className="text-3xl">🥛</span>}
-                      {(favoriteCategory as string) === DrinkCategory.PourOver && <span className="text-3xl">🫖</span>}
+                      {renderCategoryIcon(favoriteCategory, "w-10 h-10 text-brand-secondary")}
                     </div>
                     <div className="space-y-1">
                       <h3 className="text-lg font-display font-extrabold text-brand-text leading-tight">
@@ -818,8 +832,9 @@ export default function DiscoverRankings({ onQuickCheckIn, sips = [] }: Discover
                   </div>
 
                   <div className="bg-white/80 backdrop-blur-sm border border-brand-surface rounded-2xl p-3.5 text-left mt-6 shadow-sm">
-                    <span className="text-[10px] font-extrabold text-brand-text-muted uppercase block">
-                      📊 累计足迹统计：
+                    <span className="text-[10px] font-extrabold text-brand-text-muted uppercase flex items-center gap-1.5">
+                      <BarChart3 className="w-3.5 h-3.5" />
+                      累计足迹统计：
                     </span>
                     <div className="grid grid-cols-2 gap-2 mt-2">
                       <div className="text-center bg-brand-surface-low rounded-xl p-2 border border-brand-surface/40">
@@ -840,8 +855,9 @@ export default function DiscoverRankings({ onQuickCheckIn, sips = [] }: Discover
                 <div className="md:col-span-3 bg-white border border-brand-surface rounded-3xl p-6 flex flex-col justify-between shadow-sm">
                   <div className="space-y-4">
                     <div>
-                      <span className="text-[10px] font-extrabold text-brand-text-muted uppercase tracking-widest block">
-                        📈 足迹品类分布比重 (Sip Breakdown)
+                      <span className="text-[10px] font-extrabold text-brand-text-muted uppercase tracking-widest flex items-center gap-1.5">
+                        <LineChart className="w-3.5 h-3.5" />
+                        足迹品类分布比重 (Sip Breakdown)
                       </span>
                       <p className="text-xs text-brand-text-muted">
                         这代表了您在所有打卡中，不同类型饮料的倾斜比例：
@@ -864,12 +880,7 @@ export default function DiscoverRankings({ onQuickCheckIn, sips = [] }: Discover
                           <div key={cat} className="space-y-1">
                             <div className="flex justify-between items-center text-xs font-bold text-brand-text">
                               <span className="flex items-center gap-1">
-                                {cat === DrinkCategory.Coffee && "☕️ "}
-                                {cat === DrinkCategory.Matcha && "🍵 "}
-                                {cat === DrinkCategory.Tea && "🎋 "}
-                                {cat === DrinkCategory.FruitTea && "🍓 "}
-                                {cat === DrinkCategory.MilkTea && "🥛 "}
-                                {cat === DrinkCategory.PourOver && "🫖 "}
+                                {renderCategoryIcon(cat, "w-3.5 h-3.5")}
                                 {cat}
                               </span>
                               <span className="text-brand-text-muted font-display">{count} 次 ({percentage}%)</span>
@@ -913,8 +924,9 @@ export default function DiscoverRankings({ onQuickCheckIn, sips = [] }: Discover
                           <h5 className="text-sm font-extrabold text-brand-text leading-snug group-hover:text-brand-primary transition-colors">
                             {item.drinkName}
                           </h5>
-                          <p className="text-[10px] text-brand-secondary font-bold">
-                            🏢 {item.shopName}
+                          <p className="text-[10px] text-brand-secondary font-bold flex items-center gap-1">
+                            <Building2 className="w-3 h-3" />
+                            {item.shopName}
                           </p>
                           <p className="text-[11px] text-brand-text-muted line-clamp-2">
                             {item.description}

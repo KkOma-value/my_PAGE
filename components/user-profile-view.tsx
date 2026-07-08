@@ -6,8 +6,8 @@
  */
 
 import React, { useState } from "react";
-import { User, Sparkles, Award, Heart, ShieldCheck, Coffee, Flame, Settings, Edit3, Share2, ArrowRight, UserCheck, Bookmark, Eye } from "lucide-react";
-import { SipRecord, UserProfile, DrinkCategory } from "@/types";
+import { Sparkles, Award, ShieldCheck, Coffee, Flame, Edit3, Share2, ArrowRight, UserCheck, Bookmark } from "lucide-react";
+import { SipRecord, UserProfile } from "@/types";
 import { INITIAL_PROFILE, CITIES } from "../external/my_PAGE/src/data";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -112,7 +112,7 @@ export default function UserProfileView({ sips }: UserProfileViewProps) {
                 </div>
 
                 <p className="text-sm font-sans font-medium text-brand-text-muted italic max-w-md">
-                  "{profile.bio}"
+                  「{profile.bio}」
                 </p>
 
                 {/* Badges Tags Row */}

@@ -13,6 +13,27 @@ import { Loader2 } from "lucide-react";
 const USER_AVATAR =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuB-VXJ6BlpMihIC-BGTCROuLA3D26wwxVoW78lt-V-WaxgWgdq8OrJJTZJ06skGwpK0p1V6exKUT79hijpUFtqHsjZmvoq9QgyObNWS7a8aGBmaAUdQoD8AJpyWVXW7AmGm9hmEzrhXDD8lV6jhcy8btTVWi1IXi7hvDQlVynub4Gqm6fWqFPU26uYrzNhDJpNqrdLp_zR5-TvU0H951pfkCUjOKozmcmHkVTewaaqlrx5HCcCSYCh6nWQQB4w3--YfloITnlPlqP9W";
 
+type CheckInApiItem = {
+  id: string;
+  caption?: string | null;
+  locationName?: string | null;
+  date: string;
+  cardUrl?: string | null;
+  imageUrl: string;
+  city?: {
+    code?: string | null;
+  } | null;
+  drink?: {
+    name?: string | null;
+    brand?: {
+      name?: string | null;
+    } | null;
+    category?: {
+      name?: string | null;
+    } | null;
+  } | null;
+};
+
 // Helper: Map DB city code to Mock city name
 function dbCityCodeToMockName(code: string): string {
   const mapping: Record<string, string> = {
@@ -85,7 +106,7 @@ export default function HomePage() {
           setSips(INITIAL_SIPS);
         } else {
           // Map DB check-ins to front-end SipRecords
-          const mapped: SipRecord[] = json.data.map((ci: any) => {
+          const mapped: SipRecord[] = (json.data as CheckInApiItem[]).map((ci) => {
             let comment = ci.caption || "";
             let flavorTags: string[] = [];
             
@@ -124,7 +145,10 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    fetchSips();
+    const timer = window.setTimeout(() => {
+      void fetchSips();
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [fetchSips]);
 
   // Create new check-in

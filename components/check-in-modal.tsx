@@ -5,7 +5,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { X, Star, Sparkles, MapPin, Coffee, Tag, Calendar, MessageSquare, Image as ImageIcon, Loader2, Camera } from "lucide-react";
 import { DrinkCategory, SipRecord } from "@/types";
 import { CITIES, PRESET_DRINK_IMAGES } from "../external/my_PAGE/src/data";
@@ -53,15 +53,13 @@ export default function CheckInModal({ isOpen, onClose, onSave }: CheckInModalPr
   const availableTags = ["草木香", "果香", "清甜", "花香", "奶香", "微苦", "坚果香", "辛香", "清爽", "浓郁"];
   const [flavorTags, setFlavorTags] = useState<string[]>([]);
 
-  // Automatically update selected image to category preset if empty
-  useEffect(() => {
+  const updateCategory = (nextCategory: DrinkCategory) => {
+    setCategory(nextCategory);
     if (!selectedImage || selectedImage.startsWith("https://")) {
-      const presets = PRESET_DRINK_IMAGES[category];
-      if (presets && presets.length > 0) {
-        setSelectedImage(presets[0]);
-      }
+      const presets = PRESET_DRINK_IMAGES[nextCategory];
+      setSelectedImage(presets?.[0] ?? "");
     }
-  }, [category]);
+  };
 
   if (!isOpen) return null;
 
@@ -97,7 +95,7 @@ export default function CheckInModal({ isOpen, onClose, onSave }: CheckInModalPr
       } else {
         setUploadError(json.error?.message ?? "图片上传失败");
       }
-    } catch (err) {
+    } catch {
       setUploadError("网络请求失败，请重试");
     } finally {
       setUploading(false);
@@ -128,7 +126,7 @@ export default function CheckInModal({ isOpen, onClose, onSave }: CheckInModalPr
           reason: json.data.reason || ""
         });
       }
-    } catch (err) {
+    } catch {
       // Non-critical, ignore
     } finally {
       setAiLoading(false);
@@ -137,7 +135,7 @@ export default function CheckInModal({ isOpen, onClose, onSave }: CheckInModalPr
 
   const handleAcceptAi = () => {
     if (aiSuggestion) {
-      setCategory(aiSuggestion.category);
+      updateCategory(aiSuggestion.category);
     }
     setAiSuggestion(null);
   };
@@ -177,7 +175,7 @@ export default function CheckInModal({ isOpen, onClose, onSave }: CheckInModalPr
       setSelectedImage("");
       setAiSuggestion(null);
       onClose();
-    } catch (err) {
+    } catch {
       // Handled by parent
     } finally {
       setSubmitting(false);
@@ -306,12 +304,13 @@ export default function CheckInModal({ isOpen, onClose, onSave }: CheckInModalPr
                   exit={{ opacity: 0, y: -10 }}
                   className="rounded-xl bg-emerald-50 border border-emerald-100 p-3.5 flex flex-col gap-2"
                 >
-                  <p className="text-xs text-brand-text-muted leading-relaxed font-sans font-medium">
-                    ✨ AI 识别这是一杯 
+                  <p className="text-xs text-brand-text-muted leading-relaxed font-sans font-medium flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-brand-primary shrink-0" />
+                    <span>AI 识别这是一杯</span>
                     <span className="mx-1 font-bold text-brand-primary">
                       {aiSuggestion.category}
                     </span>
-                    ，可信度高达 {(aiSuggestion.confidence * 100).toFixed(0)}%。
+                    <span>，可信度高达 {(aiSuggestion.confidence * 100).toFixed(0)}%。</span>
                   </p>
                   <div className="flex gap-2">
                     <button
@@ -341,7 +340,7 @@ export default function CheckInModal({ isOpen, onClose, onSave }: CheckInModalPr
                 </label>
                 <select
                   value={category}
-                  onChange={(e) => setCategory(e.target.value as DrinkCategory)}
+                  onChange={(e) => updateCategory(e.target.value as DrinkCategory)}
                   className="w-full px-3 py-2 bg-white rounded-xl border border-brand-surface focus:outline-none focus:border-brand-primary text-sm font-medium"
                 >
                   {Object.values(DrinkCategory).map((cat) => (
