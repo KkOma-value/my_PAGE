@@ -30,6 +30,8 @@ import { SipRecord, DrinkCategory } from "@/types";
 import { CITIES, CITY_RANKINGS } from "../external/my_PAGE/src/data";
 import { motion, AnimatePresence } from "motion/react";
 
+const DISCOVER_BACKGROUND_IMAGE = "/assets/generated/sipnotes-seasonal-background.webp";
+
 // Handcrafted regional specialties for major cities
 const CITY_SPECIALS: Record<string, {
   drinkName: string;
@@ -423,7 +425,12 @@ export default function DiscoverRankings({ onQuickCheckIn, sips = [] }: Discover
   };
 
   return (
-    <div className="space-y-8 relative">
+    <div
+      className="relative -mx-3 space-y-8 overflow-hidden rounded-[28px] bg-brand-bg bg-cover bg-center px-3 py-4"
+      style={{
+        backgroundImage: `linear-gradient(rgba(250,249,245,0.8), rgba(250,249,245,0.92)), url('${DISCOVER_BACKGROUND_IMAGE}')`,
+      }}
+    >
       {/* Dynamic Action Toast */}
       <AnimatePresence>
         {showToast && (

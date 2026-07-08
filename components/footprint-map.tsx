@@ -11,6 +11,8 @@ import { SipRecord, DrinkCategory } from "@/types";
 import { CITIES, CHINA_MAP_IMAGE, INITIAL_SIPS } from "../external/my_PAGE/src/data";
 import { motion, AnimatePresence } from "motion/react";
 
+const MAP_BACKGROUND_IMAGE = "/assets/generated/sipnotes-map-background.webp";
+
 interface FootprintMapProps {
   sips: SipRecord[];
   onDeleteSip: (id: string) => void;
@@ -110,12 +112,17 @@ export default function FootprintMap({ sips, onDeleteSip, onCheckInClick }: Foot
       </div>
 
       {/* 2. Interactive Map of China */}
-      <div className="map-container w-full h-[380px] md:h-[480px] bg-[#eef1ed] rounded-3xl relative overflow-hidden border border-brand-surface">
+      <div
+        className="map-container w-full h-[380px] md:h-[480px] bg-brand-surface-low bg-cover bg-center rounded-3xl relative overflow-hidden border border-brand-surface"
+        style={{
+          backgroundImage: `linear-gradient(rgba(244,244,240,0.5), rgba(244,244,240,0.68)), url('${MAP_BACKGROUND_IMAGE}')`,
+        }}
+      >
         {/* Simulated China Map Image */}
         <img
           src={CHINA_MAP_IMAGE}
           alt="Map of China"
-          className="w-full h-full object-cover opacity-85 select-none pointer-events-none"
+          className="w-full h-full object-cover opacity-75 mix-blend-multiply select-none pointer-events-none"
           referrerPolicy="no-referrer"
         />
 

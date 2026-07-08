@@ -13,6 +13,14 @@ import { Loader2 } from "lucide-react";
 const USER_AVATAR =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuB-VXJ6BlpMihIC-BGTCROuLA3D26wwxVoW78lt-V-WaxgWgdq8OrJJTZJ06skGwpK0p1V6exKUT79hijpUFtqHsjZmvoq9QgyObNWS7a8aGBmaAUdQoD8AJpyWVXW7AmGm9hmEzrhXDD8lV6jhcy8btTVWi1IXi7hvDQlVynub4Gqm6fWqFPU26uYrzNhDJpNqrdLp_zR5-TvU0H951pfkCUjOKozmcmHkVTewaaqlrx5HCcCSYCh6nWQQB4w3--YfloITnlPlqP9W";
 
+type AppTab = "map" | "discover" | "profile";
+
+const TAB_BACKGROUNDS: Record<AppTab, string> = {
+  map: "/assets/generated/sipnotes-map-background.webp",
+  discover: "/assets/generated/sipnotes-seasonal-background.webp",
+  profile: "/assets/generated/sipnotes-auth-background.webp",
+};
+
 type CheckInApiItem = {
   id: string;
   caption?: string | null;
@@ -88,7 +96,7 @@ function dbCategoryToFrontend(name: string): DrinkCategory {
 }
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState<"map" | "discover" | "profile">("map");
+  const [activeTab, setActiveTab] = useState<AppTab>("map");
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [sips, setSips] = useState<SipRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -252,9 +260,15 @@ export default function HomePage() {
   };
 
   return (
-    <div className="bg-[#edeae1] min-h-screen flex items-center justify-center p-0 md:p-6 select-none font-sans antialiased text-brand-text">
+    <div
+      className="min-h-screen flex items-center justify-center bg-brand-surface p-0 font-sans text-brand-text antialiased select-none bg-cover bg-center md:p-6"
+      style={{
+        backgroundImage:
+          "linear-gradient(rgba(238,238,234,0.78), rgba(238,238,234,0.9)), url('/assets/generated/sipnotes-asset-board.webp')",
+      }}
+    >
       {/* Immersive Mobile-first Centered Viewport Container */}
-      <div className="w-full h-screen md:w-[412px] md:h-[840px] md:max-h-[92vh] md:rounded-[36px] md:shadow-[0_20px_50px_rgba(0,0,0,0.15)] bg-brand-bg relative flex flex-col overflow-hidden md:border md:border-brand-surface">
+      <div className="relative flex h-screen w-full flex-col overflow-hidden bg-brand-bg/95 backdrop-blur-sm md:h-[840px] md:max-h-[92vh] md:w-[412px] md:rounded-[36px] md:border md:border-brand-surface md:shadow-[0_20px_50px_rgba(0,0,0,0.15)]">
         
         {/* Navigation Top Header & Bottom Tab Bar Wrapper */}
         <Navbar
@@ -265,7 +279,12 @@ export default function HomePage() {
         />
 
         {/* Main Dynamic View Page (Scrollable) */}
-        <main className="flex-1 overflow-y-auto px-4 pt-4 pb-20 scrollbar-thin bg-brand-bg">
+        <main
+          className="flex-1 overflow-y-auto bg-brand-bg bg-cover bg-center px-4 pb-20 pt-4 scrollbar-thin"
+          style={{
+            backgroundImage: `linear-gradient(rgba(250,249,245,0.82), rgba(250,249,245,0.9)), url('${TAB_BACKGROUNDS[activeTab]}')`,
+          }}
+        >
           {loading ? (
             <div className="flex h-96 items-center justify-center">
               <div className="flex flex-col items-center gap-3">

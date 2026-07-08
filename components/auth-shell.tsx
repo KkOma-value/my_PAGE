@@ -55,6 +55,8 @@ const modeCopy = {
   },
 } satisfies Record<AuthMode, Record<string, string>>;
 
+const AUTH_BACKGROUND_IMAGE = "/assets/generated/sipnotes-auth-background.webp";
+
 function AuthField({
   id,
   label,
@@ -151,8 +153,18 @@ export default function AuthShell({ mode }: AuthShellProps) {
   }
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-brand-surface-low text-brand-text min-[768px]:flex min-[768px]:items-center min-[768px]:justify-center min-[768px]:bg-brand-surface min-[768px]:p-6">
-      <div className="mx-auto box-border min-h-screen w-full max-w-[412px] overflow-x-hidden bg-brand-bg px-5 pb-8 pt-5 min-[768px]:min-h-[840px] min-[768px]:overflow-hidden min-[768px]:rounded-[36px] min-[768px]:border min-[768px]:border-white/70 min-[768px]:shadow-[0_20px_50px_rgba(0,0,0,0.15)]">
+    <main
+      className="min-h-screen overflow-x-hidden bg-brand-surface-low bg-cover bg-center text-brand-text min-[768px]:flex min-[768px]:items-center min-[768px]:justify-center min-[768px]:bg-brand-surface min-[768px]:p-6"
+      style={{
+        backgroundImage: `linear-gradient(rgba(238,238,234,0.72), rgba(238,238,234,0.9)), url('${AUTH_BACKGROUND_IMAGE}')`,
+      }}
+    >
+      <div
+        className="mx-auto box-border min-h-screen w-full max-w-[412px] overflow-x-hidden bg-brand-bg/88 bg-cover bg-center px-5 pb-8 pt-5 backdrop-blur-[1px] min-[768px]:min-h-[840px] min-[768px]:overflow-hidden min-[768px]:rounded-[36px] min-[768px]:border min-[768px]:border-white/70 min-[768px]:shadow-[0_20px_50px_rgba(0,0,0,0.15)]"
+        style={{
+          backgroundImage: `linear-gradient(rgba(250,249,245,0.82), rgba(250,249,245,0.94)), url('${AUTH_BACKGROUND_IMAGE}')`,
+        }}
+      >
         <header className="flex min-w-0 items-center justify-between">
           <Link
             href="/"
