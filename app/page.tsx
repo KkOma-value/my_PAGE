@@ -7,7 +7,7 @@ import DiscoverRankings from "@/components/discover-rankings";
 import UserProfileView from "@/components/user-profile-view";
 import CheckInModal from "@/components/check-in-modal";
 import { DrinkCategory, SipRecord } from "@/types";
-import { INITIAL_SIPS } from "../external/my_PAGE/src/data";
+import { INITIAL_SIPS } from "@/src/data";
 import { Loader2 } from "lucide-react";
 
 const USER_AVATAR =

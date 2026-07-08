@@ -27,7 +27,7 @@ import {
   LineChart
 } from "lucide-react";
 import { SipRecord, DrinkCategory } from "@/types";
-import { CITIES, CITY_RANKINGS } from "../external/my_PAGE/src/data";
+import { CITIES, CITY_RANKINGS } from "@/src/data";
 import { motion, AnimatePresence } from "motion/react";
 
 const DISCOVER_BACKGROUND_IMAGE = "/assets/generated/sipnotes-seasonal-background.webp";

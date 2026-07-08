@@ -8,7 +8,7 @@
 import React, { useState } from "react";
 import { MapPin, ArrowRight, Star, Heart, Calendar, Coffee, Sparkles, Trash2 } from "lucide-react";
 import { SipRecord, DrinkCategory } from "@/types";
-import { CITIES, CHINA_MAP_IMAGE, INITIAL_SIPS } from "../external/my_PAGE/src/data";
+import { CITIES, CHINA_MAP_IMAGE, INITIAL_SIPS } from "@/src/data";
 import { motion, AnimatePresence } from "motion/react";
 
 const MAP_BACKGROUND_IMAGE = "/assets/generated/sipnotes-map-background.webp";

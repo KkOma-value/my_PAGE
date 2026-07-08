@@ -8,7 +8,7 @@
 import React, { useState, useRef } from "react";
 import { X, Star, Sparkles, MapPin, Coffee, Tag, Calendar, MessageSquare, Image as ImageIcon, Loader2, Camera } from "lucide-react";
 import { DrinkCategory, SipRecord } from "@/types";
-import { CITIES, PRESET_DRINK_IMAGES } from "../external/my_PAGE/src/data";
+import { CITIES, PRESET_DRINK_IMAGES } from "@/src/data";
 import { motion, AnimatePresence } from "motion/react";
 
 interface CheckInModalProps {

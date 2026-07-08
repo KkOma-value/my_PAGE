@@ -8,7 +8,7 @@
 import React, { useState } from "react";
 import { Sparkles, Award, ShieldCheck, Coffee, Flame, Edit3, Share2, ArrowRight, UserCheck, Bookmark } from "lucide-react";
 import { SipRecord, UserProfile } from "@/types";
-import { INITIAL_PROFILE, CITIES } from "../external/my_PAGE/src/data";
+import { INITIAL_PROFILE, CITIES } from "@/src/data";
 import { motion, AnimatePresence } from "motion/react";
 
 interface UserProfileViewProps {
