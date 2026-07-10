@@ -6,6 +6,7 @@ import {
   ALLOWED_DRINK_IMAGE_TYPES,
   attachSignedImageUrl,
   createImageObjectPath,
+  createRecognitionObjectId,
   DRINK_IMAGE_BUCKET,
   MAX_DRINK_IMAGE_BYTES,
 } from "@/lib/mobile/image-storage";
@@ -54,7 +55,12 @@ export async function POST(request: Request, context: RouteContext) {
       .eq("id", draftId)
       .eq("user_id", userId);
 
-    const imagePath = createImageObjectPath(userId, draftId, randomUUID(), file.type);
+    const imagePath = createImageObjectPath(
+      userId,
+      draftId,
+      createRecognitionObjectId(file.name, randomUUID()),
+      file.type,
+    );
     const upload = await admin.storage.from(DRINK_IMAGE_BUCKET).upload(
       imagePath,
       Buffer.from(await file.arrayBuffer()),

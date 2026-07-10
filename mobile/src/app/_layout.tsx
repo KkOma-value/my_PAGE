@@ -2,17 +2,20 @@ import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { AuthGate } from '@/components/AuthGate';
 
 export default function TabLayout() {
   return (
     <SafeAreaProvider>
       <StatusBar style="dark" />
-      <Tabs
-        screenOptions={{
+      <AuthGate>
+        <Tabs
+          initialRouteName="check-in"
+          screenOptions={{
           tabBarActiveTintColor: '#43664d',
           tabBarInactiveTintColor: '#78716c',
-          tabBarStyle: {
-            backgroundColor: '#faf9f5',
+            tabBarStyle: {
+            backgroundColor: '#F7F8F5',
             borderTopColor: '#eeeeea',
             borderTopWidth: 1,
             elevation: 8,
@@ -22,7 +25,7 @@ export default function TabLayout() {
             shadowRadius: 3,
             paddingBottom: 5,
             paddingTop: 5,
-            height: 60,
+            height: 64,
           },
           tabBarLabelStyle: {
             fontSize: 11,
@@ -43,30 +46,41 @@ export default function TabLayout() {
             fontFamily: 'System',
           },
         }}
-      >
-        <Tabs.Screen
-          name="index"
-          options={{
-            title: '我的足迹',
-            headerTitle: 'SipNotes 饮品足迹',
-            tabBarLabel: '足迹地图',
+        >
+          <Tabs.Screen
+            name="check-in"
+            options={{
+              title: '打卡',
+              headerTitle: '记录这一杯',
+              tabBarLabel: '打卡',
+              tabBarIcon: ({ color, size, focused }) => (
+                <Ionicons name={focused ? 'camera' : 'camera-outline'} size={size} color={color} />
+              ),
+            }}
+          />
+          <Tabs.Screen
+            name="index"
+            options={{
+            title: '地图',
+            headerTitle: 'SipNotes 足迹地图',
+            tabBarLabel: '地图',
             tabBarIcon: ({ color, size, focused }) => (
               <Ionicons name={focused ? 'map' : 'map-outline'} size={size} color={color} />
             ),
           }}
-        />
-        <Tabs.Screen
+          />
+          <Tabs.Screen
           name="discover"
           options={{
-            title: '人气排行',
-            headerTitle: 'SipNotes 探索排行',
-            tabBarLabel: '探索发现',
+            title: '发现',
+            headerTitle: 'SipNotes 发现',
+            tabBarLabel: '发现',
             tabBarIcon: ({ color, size, focused }) => (
               <Ionicons name={focused ? 'compass' : 'compass-outline'} size={size} color={color} />
             ),
           }}
-        />
-        <Tabs.Screen
+          />
+          <Tabs.Screen
           name="profile"
           options={{
             title: '个人中心',
@@ -76,8 +90,9 @@ export default function TabLayout() {
               <Ionicons name={focused ? 'person' : 'person-outline'} size={size} color={color} />
             ),
           }}
-        />
-      </Tabs>
+          />
+        </Tabs>
+      </AuthGate>
     </SafeAreaProvider>
   );
 }

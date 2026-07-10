@@ -26,6 +26,16 @@ export function createImageObjectPath(
     `.${imageExtensionForMime(mimeType)}`;
 }
 
+export function createRecognitionObjectId(filename: string, objectId: string) {
+  const stem = filename
+    .replace(/\.[^.]+$/, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40) || "photo";
+  return `${stem}-${safePathSegment(objectId)}`;
+}
+
 export async function signImagePath(imagePath: string, expiresInSeconds = 3600) {
   const { data, error } = await getSupabaseAdmin().storage
     .from(DRINK_IMAGE_BUCKET)

@@ -3,6 +3,7 @@ import {
   attachSignedImageUrl,
   attachSignedRecommendationImages,
   createImageObjectPath,
+  createRecognitionObjectId,
   imageExtensionForMime,
 } from "./image-storage";
 
@@ -20,6 +21,10 @@ describe("private image storage", () => {
 
   it("rejects unsupported image types", () => {
     expect(() => imageExtensionForMime("image/gif")).toThrow("Unsupported image type");
+  });
+
+  it("keeps safe filename keywords for deterministic mock recognition", () => {
+    expect(createRecognitionObjectId("Iced Coffee.JPG", "object-id")).toBe("iced-coffee-object-id");
   });
 
   it("adds a temporary URL without exposing stored object path", async () => {
