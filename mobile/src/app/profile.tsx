@@ -1,254 +1,219 @@
-import React, { useState, useEffect } from 'react';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect } from "expo-router";
 import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-  ScrollView,
-  TextInput,
+  ActivityIndicator,
   Alert,
-  Dimensions,
-} from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { INITIAL_PROFILE, CITIES } from '../data';
-import { SipRecord, UserProfile, DrinkCategory } from '../types';
-import { API_BASE } from '@/constants/Config';
+  Image,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { DrinkCalendar } from "@/components/DrinkCalendar";
+import { deleteAccount, signOut } from "@/lib/auth";
+import { fetchMyCheckIns } from "@/lib/checkins";
+import { checkinsForDate, summarizeCheckins } from "@/lib/profile";
+import { getSupabase } from "@/lib/supabase";
+import type { PublishedCheckIn } from "@/types/app";
 
-const { width } = Dimensions.get('window');
+const CATEGORY_LABELS: Record<string, string> = {
+  coffee: "咖啡",
+  pour_over: "手冲",
+  milk_tea: "奶茶",
+  fruit_tea: "果茶",
+  tea: "原叶茶",
+  matcha: "抹茶",
+  other: "其他",
+};
+
+function dateKey(date: Date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+}
 
 export default function ProfileScreen() {
-  const [profile, setProfile] = useState<UserProfile>(INITIAL_PROFILE);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState(profile.name);
-  const [editBio, setEditBio] = useState(profile.bio);
-  const [sips, setSips] = useState<SipRecord[]>([]);
-
-  // Fetch checkins to display stats and favorite list
-  const fetchSips = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/checkins?userId=demo-user-001&limit=100`);
-      const json = await res.json();
-      if (json.success && Array.isArray(json.data)) {
-        const mapped = json.data.map((ci: any) => ({
-          id: ci.id,
-          drinkName: ci.drink?.name || '未知饮品',
-          shopName: ci.drink?.brand?.name || '未知店铺',
-          cityName: ci.city?.code || 'shanghai',
-          date: ci.date,
-          category: dbCategoryToFrontend(ci.drink?.category?.name || 'other'),
-          imageUrl: ci.cardUrl || ci.imageUrl,
-          rating: 5,
-        }));
-        setSips(mapped);
-      }
-    } catch (err) {
-      console.log('Failed to fetch user checkins for profile', err);
-    }
-  };
+  const today = useMemo(() => new Date(), []);
+  const [displayName, setDisplayName] = useState("SipNotes 用户");
+  const [accountLabel, setAccountLabel] = useState("");
+  const [checkins, setCheckins] = useState<PublishedCheckIn[]>([]);
+  const [month, setMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
+  const [selectedDate, setSelectedDate] = useState(() => dateKey(today));
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
-    fetchSips();
+    let mounted = true;
+    getSupabase().auth.getSession().then(({ data }) => {
+      if (!mounted || !data.session?.user) return;
+      const user = data.session.user;
+      const name = typeof user.user_metadata.full_name === "string" ? user.user_metadata.full_name.trim() : "";
+      setDisplayName(name || user.phone || "SipNotes 用户");
+      setAccountLabel(user.phone || user.email || "Apple ID");
+    });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  function dbCategoryToFrontend(name: string): DrinkCategory {
-    switch (name) {
-      case 'coffee':
-        return DrinkCategory.Coffee;
-      case 'milk_tea':
-        return DrinkCategory.MilkTea;
-      case 'fruit_tea':
-        return DrinkCategory.FruitTea;
-      default:
-        return DrinkCategory.Tea;
+  const loadCheckins = useCallback(async () => {
+    try {
+      setErrorMessage("");
+      setCheckins(await fetchMyCheckIns());
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : "饮记加载失败");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useFocusEffect(useCallback(() => {
+    void loadCheckins();
+  }, [loadCheckins]));
+
+  const summary = useMemo(() => summarizeCheckins(checkins), [checkins]);
+  const selectedRecords = useMemo(
+    () => checkinsForDate(checkins, selectedDate),
+    [checkins, selectedDate],
+  );
+
+  function moveMonth(offset: number) {
+    const next = new Date(month.getFullYear(), month.getMonth() + offset, 1);
+    setMonth(next);
+    setSelectedDate(dateKey(next));
+  }
+
+  function refresh() {
+    setRefreshing(true);
+    void loadCheckins();
+  }
+
+  async function handleSignOut() {
+    try {
+      await signOut();
+    } catch (error) {
+      Alert.alert("退出失败", error instanceof Error ? error.message : "请稍后重试");
     }
   }
 
-  // Dynamic statistics calculations
-  const totalSipsCount = 142 + (sips.length - 4); // base 142
-  const dayStreak = 15 + Math.floor((sips.length - 4) / 2); // base 15
-
-  const getTopCategoryLabel = () => {
-    if (sips.length === 0) return '精品咖啡';
-    const counts: Record<string, number> = {};
-    sips.forEach((s) => {
-      counts[s.category] = (counts[s.category] || 0) + 1;
-    });
-    let topCat = 'coffee';
-    let maxCount = 0;
-    Object.entries(counts).forEach(([cat, count]) => {
-      if (count > maxCount) {
-        maxCount = count;
-        topCat = cat;
-      }
-    });
-
-    const mapping: Record<string, string> = {
-      [DrinkCategory.Coffee]: '精品咖啡',
-      [DrinkCategory.PourOver]: '精品手冲',
-      [DrinkCategory.MilkTea]: '奶茶特饮',
-      [DrinkCategory.FruitTea]: '鲜果茶饮',
-      [DrinkCategory.Matcha]: '西尾抹茶',
-      [DrinkCategory.Tea]: '传统茗茶',
-    };
-    return mapping[topCat] || '特色饮品';
-  };
-
-  // Save profile changes
-  const handleSaveProfile = () => {
-    if (!editName.trim()) {
-      Alert.alert('提示', '姓名不能为空');
-      return;
+  async function handleDeleteAccount() {
+    try {
+      setDeleting(true);
+      await deleteAccount();
+    } catch (error) {
+      Alert.alert("删除失败", error instanceof Error ? error.message : "请稍后重试");
+      setDeleting(false);
     }
-    setProfile({
-      ...profile,
-      name: editName,
-      bio: editBio,
-    });
-    setIsEditing(false);
-    Alert.alert('成功', '个人资料已更新');
-  };
+  }
+
+  function confirmDeleteAccount() {
+    Alert.alert(
+      "删除账号",
+      "删除后将移除你的资料、私密记录和公开卡片。此操作无法撤销。",
+      [
+        { text: "取消", style: "cancel" },
+        { text: "确认删除", style: "destructive", onPress: () => void handleDeleteAccount() },
+      ],
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Profile Card Header */}
-        <View style={styles.profileHeaderCard}>
-          <Image source={{ uri: profile.avatarUrl }} style={styles.avatar} />
-          
-          {isEditing ? (
-            <View style={styles.editForm}>
-              <TextInput
-                style={styles.input}
-                value={editName}
-                onChangeText={setEditName}
-                placeholder="名称"
-              />
-              <TextInput
-                style={[styles.input, styles.bioInput]}
-                value={editBio}
-                onChangeText={setEditBio}
-                placeholder="个性签名"
-                multiline
-              />
-              <View style={styles.editBtnRow}>
-                <TouchableOpacity
-                  onPress={() => {
-                    setEditName(profile.name);
-                    setEditBio(profile.bio);
-                    setIsEditing(false);
-                  }}
-                  style={[styles.editFormBtn, styles.cancelBtn]}
-                >
-                  <Text style={styles.cancelBtnText}>取消</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={handleSaveProfile}
-                  style={[styles.editFormBtn, styles.saveBtn]}
-                >
-                  <Text style={styles.saveBtnText}>保存</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ) : (
-            <View style={styles.profileInfoCol}>
-              <View style={styles.profileNameRow}>
-                <Text style={styles.profileName}>{profile.name}</Text>
-                <TouchableOpacity onPress={() => setIsEditing(true)}>
-                  <Ionicons name="create-outline" size={16} color="#43664d" />
-                </TouchableOpacity>
-              </View>
-              <Text style={styles.profileHandle}>{profile.handle}</Text>
-              <Text style={styles.profileBio}>{profile.bio}</Text>
-            </View>
+    <SafeAreaView style={styles.safeArea} edges={["bottom"]}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#2F6B49" />}
+      >
+        <View style={styles.identityBand}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarLetter}>{displayName.slice(0, 1).toUpperCase()}</Text>
+          </View>
+          <View style={styles.identityCopy}>
+            <Text style={styles.displayName} numberOfLines={1}>{displayName}</Text>
+            {accountLabel ? <Text style={styles.accountLabel} numberOfLines={1}>{accountLabel}</Text> : null}
+          </View>
+        </View>
+
+        <View style={styles.metricsBand}>
+          <View style={styles.metric}>
+            <Text style={styles.metricValue}>{summary.total}</Text>
+            <Text style={styles.metricLabel}>饮记</Text>
+          </View>
+          <View style={styles.metricDivider} />
+          <View style={styles.metric}>
+            <Text style={styles.metricValue}>{summary.cityCount}</Text>
+            <Text style={styles.metricLabel}>城市</Text>
+          </View>
+          <View style={styles.metricDivider} />
+          <View style={styles.metric}>
+            <Text style={styles.metricValueSmall}>{summary.topCategory ? CATEGORY_LABELS[summary.topCategory] ?? summary.topCategory : "暂无"}</Text>
+            <Text style={styles.metricLabel}>常喝</Text>
+          </View>
+        </View>
+
+        <View style={styles.calendarBand}>
+          <View style={styles.monthHeader}>
+            <Pressable onPress={() => moveMonth(-1)} style={styles.iconButton} accessibilityLabel="上个月">
+              <Ionicons name="chevron-back" size={21} color="#2F6B49" />
+            </Pressable>
+            <Text style={styles.monthTitle}>{month.getFullYear()} 年 {month.getMonth() + 1} 月</Text>
+            <Pressable onPress={() => moveMonth(1)} style={styles.iconButton} accessibilityLabel="下个月">
+              <Ionicons name="chevron-forward" size={21} color="#2F6B49" />
+            </Pressable>
+          </View>
+          {loading ? <ActivityIndicator color="#2F6B49" style={styles.loader} /> : (
+            <DrinkCalendar
+              month={month}
+              checkins={checkins}
+              selectedDate={selectedDate}
+              onSelectDate={setSelectedDate}
+            />
           )}
+          {errorMessage ? <Text style={styles.error}>{errorMessage}</Text> : null}
         </View>
 
-        {/* Dynamic Stats Row */}
-        <View style={styles.statsRow}>
-          <View style={styles.statBox}>
-            <Text style={styles.statVal}>{totalSipsCount}</Text>
-            <Text style={styles.statLbl}>累计打卡</Text>
+        <View style={styles.recordsBand}>
+          <View style={styles.recordsHeader}>
+            <Text style={styles.sectionTitle}>{selectedDate.slice(5).replace("-", " 月 ")} 日</Text>
+            <Text style={styles.recordCount}>{selectedRecords.length} 杯</Text>
           </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statVal}>{dayStreak}天</Text>
-            <Text style={styles.statLbl}>连续天数</Text>
-          </View>
-          <View style={styles.statBox}>
-            <Text style={styles.statVal}>{getTopCategoryLabel()}</Text>
-            <Text style={styles.statLbl}>最爱类别</Text>
-          </View>
-        </View>
-
-        {/* Badges Earned */}
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionHeaderTitle}>🏆 获得的成就勋章 ({profile.badges.length})</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.badgesScroll}>
-            {profile.badges.map((badge) => {
-              let badgeColor = '#43664d';
-              if (badge.id === 'badge-coffee') badgeColor = '#79573f';
-              if (badge.id === 'badge-citrus') badgeColor = '#c89d3c';
-
-              return (
-                <View key={badge.id} style={[styles.badgeCard, { borderColor: badgeColor }]}>
-                  <Ionicons
-                    name={
-                      badge.icon === 'verified'
-                        ? 'checkmark-circle-outline'
-                        : badge.icon === 'local_cafe'
-                        ? 'cafe-outline'
-                        : badge.icon === 'explore'
-                        ? 'compass-outline'
-                        : 'map-outline'
-                    }
-                    size={24}
-                    color={badgeColor}
-                  />
-                  <Text style={[styles.badgeName, { color: badgeColor }]}>{badge.name}</Text>
-                  <Text style={styles.badgeDesc}>{badge.description}</Text>
+          {selectedRecords.length === 0 ? <Text style={styles.emptyText}>当日暂无饮记</Text> : null}
+          {selectedRecords.map((checkin) => (
+            <View key={checkin.id} style={styles.recordCard}>
+              <Image source={{ uri: checkin.image_url }} style={styles.recordImage} alt={`${checkin.drink_name}照片`} />
+              <View style={styles.recordCopy}>
+                <Text style={styles.recordDrink} numberOfLines={1}>{checkin.drink_name}</Text>
+                <Text style={styles.recordBrand} numberOfLines={1}>{checkin.brand_name}{checkin.store_name ? ` · ${checkin.store_name}` : ""}</Text>
+                <View style={styles.recordMetaRow}>
+                  <Text style={styles.recordMeta}>{CATEGORY_LABELS[checkin.category] ?? checkin.category}</Text>
+                  <Ionicons name={checkin.visibility === "public" ? "earth-outline" : "lock-closed-outline"} size={13} color="#7A847D" />
+                  <Text style={styles.recordMeta}>{checkin.visibility === "public" ? "公开" : "私密"}</Text>
                 </View>
-              );
-            })}
-          </ScrollView>
-        </View>
-
-        {/* Favorite Drinks List */}
-        <View style={[styles.sectionContainer, { marginTop: 10 }]}>
-          <Text style={styles.sectionHeaderTitle}>❤️ 收藏的经典饮记 ({sips.length})</Text>
-          {sips.map((item) => (
-            <View key={item.id} style={styles.favDrinkItem}>
-              <Image source={{ uri: item.imageUrl }} style={styles.favDrinkImg} />
-              <View style={styles.favDrinkInfo}>
-                <Text style={styles.favDrinkName} numberOfLines={1}>
-                  {item.drinkName}
-                </Text>
-                <Text style={styles.favDrinkShop}>{item.shopName}</Text>
               </View>
-              <Ionicons name="heart" size={16} color="#dc2626" />
             </View>
           ))}
-          {sips.length === 0 && (
-            <Text style={styles.noFavText}>暂无收藏的饮记，赶紧去地图打卡吧！</Text>
-          )}
         </View>
 
-        {/* Settings Menu Options */}
-        <View style={styles.settingsMenu}>
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuItemLeft}>
-              <Ionicons name="settings-outline" size={18} color="#78716c" />
-              <Text style={styles.menuItemText}>我的偏好设置</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color="#a8a29e" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem}>
-            <View style={styles.menuItemLeft}>
-              <Ionicons name="share-social-outline" size={18} color="#78716c" />
-              <Text style={styles.menuItemText}>分享足迹图给好友</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={16} color="#a8a29e" />
-          </TouchableOpacity>
+        <View style={styles.accountBand}>
+          <Text style={styles.sectionTitle}>账号</Text>
+          <Pressable onPress={() => void handleSignOut()} style={styles.accountRow}>
+            <Ionicons name="log-out-outline" size={21} color="#24332A" />
+            <Text style={styles.accountText}>退出登录</Text>
+            <Ionicons name="chevron-forward" size={17} color="#9AA39D" />
+          </Pressable>
+          <Pressable onPress={confirmDeleteAccount} disabled={deleting} style={styles.accountRow}>
+            <Ionicons name="trash-outline" size={21} color="#A34D3F" />
+            <Text style={styles.deleteText}>{deleting ? "正在删除..." : "删除账号"}</Text>
+            {deleting ? <ActivityIndicator size="small" color="#A34D3F" /> : <Ionicons name="chevron-forward" size={17} color="#B98980" />}
+          </Pressable>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -256,239 +221,40 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#faf9f5',
-  },
-  scrollContent: {
-    paddingBottom: 40,
-  },
-  profileHeaderCard: {
-    backgroundColor: '#ffffff',
-    borderColor: '#eeeeea',
-    borderWidth: 1,
-    borderRadius: 24,
-    marginHorizontal: 16,
-    marginTop: 15,
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    shadowColor: '#79573f',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 1,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#f5f5f5',
-  },
-  profileInfoCol: {
-    flex: 1,
-    marginLeft: 20,
-  },
-  profileNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  profileName: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#43664d',
-  },
-  profileHandle: {
-    fontSize: 12,
-    color: '#78716c',
-    marginTop: 2,
-    fontWeight: 'bold',
-  },
-  profileBio: {
-    fontSize: 12,
-    color: '#4a4a4a',
-    marginTop: 8,
-    lineHeight: 16,
-  },
-  editForm: {
-    flex: 1,
-    marginLeft: 20,
-  },
-  input: {
-    borderColor: '#eeeeea',
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    fontSize: 14,
-    color: '#2c2c2c',
-    marginBottom: 8,
-  },
-  bioInput: {
-    height: 50,
-    textAlignVertical: 'top',
-  },
-  editBtnRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 8,
-  },
-  editFormBtn: {
-    paddingVertical: 5,
-    paddingHorizontal: 12,
-    borderRadius: 6,
-  },
-  cancelBtn: {
-    backgroundColor: '#eeeeea',
-  },
-  cancelBtnText: {
-    fontSize: 11,
-    color: '#78716c',
-    fontWeight: 'bold',
-  },
-  saveBtn: {
-    backgroundColor: '#43664d',
-  },
-  saveBtnText: {
-    fontSize: 11,
-    color: '#ffffff',
-    fontWeight: 'bold',
-  },
-  statsRow: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginTop: 15,
-    gap: 10,
-  },
-  statBox: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    borderColor: '#eeeeea',
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingVertical: 12,
-    alignItems: 'center',
-    shadowColor: '#79573f',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.03,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  statVal: {
-    fontSize: 18,
-    fontWeight: '800',
-    color: '#43664d',
-  },
-  statLbl: {
-    fontSize: 9,
-    fontWeight: 'bold',
-    color: '#78716c',
-    marginTop: 4,
-  },
-  sectionContainer: {
-    marginHorizontal: 16,
-    marginTop: 20,
-  },
-  sectionHeaderTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#43664d',
-    marginBottom: 10,
-  },
-  badgesScroll: {
-    flexDirection: 'row',
-    paddingVertical: 5,
-  },
-  badgeCard: {
-    backgroundColor: '#ffffff',
-    borderWidth: 1.5,
-    borderRadius: 20,
-    padding: 12,
-    alignItems: 'center',
-    width: 110,
-    marginRight: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.02,
-    shadowRadius: 4,
-    elevation: 1,
-  },
-  badgeName: {
-    fontSize: 11,
-    fontWeight: '800',
-    marginTop: 6,
-    textAlign: 'center',
-  },
-  badgeDesc: {
-    fontSize: 8,
-    color: '#78716c',
-    textAlign: 'center',
-    marginTop: 4,
-    lineHeight: 10,
-  },
-  favDrinkItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#ffffff',
-    borderColor: '#eeeeea',
-    borderWidth: 1,
-    borderRadius: 16,
-    padding: 10,
-    marginBottom: 8,
-  },
-  favDrinkImg: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    backgroundColor: '#f5f5f5',
-  },
-  favDrinkInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  favDrinkName: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#2c2c2c',
-  },
-  favDrinkShop: {
-    fontSize: 10,
-    color: '#78716c',
-    marginTop: 2,
-  },
-  noFavText: {
-    fontSize: 12,
-    color: '#a8a29e',
-    textAlign: 'center',
-    paddingVertical: 20,
-  },
-  settingsMenu: {
-    backgroundColor: '#ffffff',
-    borderColor: '#eeeeea',
-    borderWidth: 1,
-    borderRadius: 20,
-    marginHorizontal: 16,
-    marginTop: 20,
-    overflow: 'hidden',
-  },
-  menuItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderBottomColor: '#f5f5f5',
-    borderBottomWidth: 1,
-  },
-  menuItemLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  menuItemText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#2c2c2c',
-  },
+  safeArea: { flex: 1, backgroundColor: "#F2F4F0" },
+  content: { paddingBottom: 34 },
+  identityBand: { minHeight: 104, paddingHorizontal: 18, backgroundColor: "#FFFFFF", flexDirection: "row", alignItems: "center" },
+  avatar: { width: 58, height: 58, borderRadius: 29, backgroundColor: "#DCE9DF", alignItems: "center", justifyContent: "center" },
+  avatarLetter: { color: "#2F6B49", fontSize: 23, fontWeight: "900" },
+  identityCopy: { flex: 1, minWidth: 0, marginLeft: 14 },
+  displayName: { fontSize: 19, fontWeight: "900", color: "#24332A" },
+  accountLabel: { marginTop: 5, fontSize: 12, color: "#7A847D" },
+  metricsBand: { height: 86, backgroundColor: "#FFFFFF", borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#E2E6E1", flexDirection: "row", alignItems: "center" },
+  metric: { flex: 1, alignItems: "center" },
+  metricValue: { height: 29, fontSize: 23, fontWeight: "900", color: "#24332A" },
+  metricValueSmall: { height: 29, maxWidth: 90, fontSize: 16, lineHeight: 29, fontWeight: "900", color: "#24332A" },
+  metricLabel: { marginTop: 3, fontSize: 11, fontWeight: "700", color: "#7A847D" },
+  metricDivider: { width: StyleSheet.hairlineWidth, height: 36, backgroundColor: "#DDE2DC" },
+  calendarBand: { marginTop: 10, paddingHorizontal: 12, paddingTop: 12, paddingBottom: 18, backgroundColor: "#FFFFFF" },
+  monthHeader: { height: 44, flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  monthTitle: { fontSize: 16, fontWeight: "900", color: "#24332A" },
+  iconButton: { width: 42, height: 42, alignItems: "center", justifyContent: "center" },
+  loader: { marginVertical: 80 },
+  error: { marginTop: 10, color: "#A34D3F", fontSize: 12, lineHeight: 18 },
+  recordsBand: { marginTop: 10, paddingHorizontal: 16, paddingVertical: 18, backgroundColor: "#FFFFFF" },
+  recordsHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
+  sectionTitle: { fontSize: 17, fontWeight: "900", color: "#24332A" },
+  recordCount: { fontSize: 11, fontWeight: "700", color: "#7A847D" },
+  emptyText: { paddingVertical: 28, textAlign: "center", color: "#8A948D", fontSize: 13 },
+  recordCard: { height: 100, marginBottom: 10, borderWidth: 1, borderColor: "#DDE2DC", backgroundColor: "#FFFFFF", flexDirection: "row" },
+  recordImage: { width: 98, height: 98, backgroundColor: "#E3E7E2" },
+  recordCopy: { flex: 1, minWidth: 0, paddingHorizontal: 12, justifyContent: "center" },
+  recordDrink: { fontSize: 15, fontWeight: "900", color: "#24332A" },
+  recordBrand: { marginTop: 4, fontSize: 11, fontWeight: "700", color: "#59645D" },
+  recordMetaRow: { marginTop: 9, flexDirection: "row", alignItems: "center", gap: 5 },
+  recordMeta: { fontSize: 10, color: "#7A847D" },
+  accountBand: { marginTop: 10, paddingHorizontal: 16, paddingTop: 18, backgroundColor: "#FFFFFF" },
+  accountRow: { height: 58, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: "#E2E6E1", flexDirection: "row", alignItems: "center", gap: 10 },
+  accountText: { flex: 1, fontSize: 14, fontWeight: "700", color: "#24332A" },
+  deleteText: { flex: 1, fontSize: 14, fontWeight: "700", color: "#A34D3F" },
 });
