@@ -38,12 +38,24 @@ export async function attachSignedImageUrl<T extends { image_path?: string | nul
   row: T,
   signer: (path: string) => Promise<string> = signImagePath,
 ) {
+  const { image_path: imagePath, ...publicRow } = row;
   return {
-    ...row,
-    image_url: row.image_path ? await signer(row.image_path) : null,
+    ...publicRow,
+    image_url: imagePath ? await signer(imagePath) : null,
   };
 }
 
 export async function attachSignedImageUrls<T extends { image_path?: string | null }>(rows: T[]) {
   return Promise.all(rows.map((row) => attachSignedImageUrl(row)));
+}
+
+export async function attachSignedRecommendationImages<
+  T extends { imagePath?: string | null; imageUrl?: string | null },
+>(items: T[], signer: (path: string) => Promise<string> = signImagePath) {
+  return Promise.all(
+    items.map(async (item) => {
+      const { imagePath, ...publicItem } = item;
+      return imagePath ? { ...publicItem, imageUrl: await signer(imagePath) } : publicItem;
+    }),
+  );
 }

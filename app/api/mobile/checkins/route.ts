@@ -1,13 +1,59 @@
 import { requireUser } from "@/lib/api/auth";
 import { errorDetails, jsonError, jsonOk } from "@/lib/api/responses";
 import { moderationStatusForCaption, publishCheckInSchema } from "@/lib/mobile/checkin-input";
+import { collectBlockedUserIds, decorateCommunityRows } from "@/lib/mobile/community";
 import { attachSignedImageUrl, attachSignedImageUrls } from "@/lib/mobile/image-storage";
 import { getSupabaseAdmin } from "@/lib/supabase/server";
 
 export async function GET(request: Request) {
   try {
     const { userId } = await requireUser(request);
-    const { data, error } = await getSupabaseAdmin()
+    const scope = new URL(request.url).searchParams.get("scope") ?? "mine";
+    const admin = getSupabaseAdmin();
+
+    if (scope === "community") {
+      const blocks = await admin
+        .from("blocks")
+        .select("blocker_id,blocked_id")
+        .or(`blocker_id.eq.${userId},blocked_id.eq.${userId}`);
+      if (blocks.error) return jsonError("BLOCKS_READ_FAILED", blocks.error.message, 500);
+      const blockedUserIds = collectBlockedUserIds(blocks.data ?? [], userId);
+
+      let communityQuery = admin
+        .from("checkins")
+        .select("*, profiles!checkins_user_id_fkey(id,display_name,avatar_path), cities(code,display_name), city_regions(code,display_name)")
+        .eq("visibility", "public")
+        .eq("publish_status", "published")
+        .eq("moderation_status", "visible")
+        .order("created_at", { ascending: false })
+        .limit(50);
+      if (blockedUserIds.length > 0) {
+        communityQuery = communityQuery.not("user_id", "in", `(${blockedUserIds.join(",")})`);
+      }
+
+      const community = await communityQuery;
+      if (community.error) return jsonError("COMMUNITY_READ_FAILED", community.error.message, 500);
+      const checkinIds = (community.data ?? []).map((row) => row.id);
+      if (checkinIds.length === 0) return jsonOk([]);
+
+      const [likes, favorites] = await Promise.all([
+        admin.from("likes").select("checkin_id").eq("user_id", userId).in("checkin_id", checkinIds),
+        admin.from("favorites").select("checkin_id").eq("user_id", userId).in("checkin_id", checkinIds),
+      ]);
+      if (likes.error) return jsonError("LIKES_READ_FAILED", likes.error.message, 500);
+      if (favorites.error) return jsonError("FAVORITES_READ_FAILED", favorites.error.message, 500);
+
+      const decorated = decorateCommunityRows(
+        community.data ?? [],
+        (likes.data ?? []).map((row) => row.checkin_id),
+        (favorites.data ?? []).map((row) => row.checkin_id),
+      );
+      return jsonOk(await attachSignedImageUrls(decorated));
+    }
+
+    if (scope !== "mine") return jsonError("INVALID_SCOPE", "Scope must be mine or community", 400);
+
+    const { data, error } = await admin
       .from("checkins")
       .select("*, cities(code,display_name,map_x,map_y), city_regions(code,display_name,map_x,map_y)")
       .eq("user_id", userId)

@@ -49,4 +49,9 @@ describe("Supabase schema contract", () => {
     expect(sql).toContain("private.handle_new_user");
     expect(sql).not.toContain("function public.handle_new_user");
   });
+
+  it("makes draft publication idempotent", () => {
+    const sql = loadMigration();
+    expect(sql).toContain("source_draft_id uuid not null unique");
+  });
 });

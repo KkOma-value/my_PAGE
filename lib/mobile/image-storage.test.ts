@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { attachSignedImageUrl, createImageObjectPath, imageExtensionForMime } from "./image-storage";
+import {
+  attachSignedImageUrl,
+  attachSignedRecommendationImages,
+  createImageObjectPath,
+  imageExtensionForMime,
+} from "./image-storage";
 
 describe("private image storage", () => {
   it("builds an owner-scoped object path", () => {
@@ -17,7 +22,7 @@ describe("private image storage", () => {
     expect(() => imageExtensionForMime("image/gif")).toThrow("Unsupported image type");
   });
 
-  it("adds a temporary URL without replacing stored object path", async () => {
+  it("adds a temporary URL without exposing stored object path", async () => {
     const result = await attachSignedImageUrl(
       { id: "draft", image_path: "owner/draft/photo.jpg" },
       async (path) => `https://signed.example/${path}`,
@@ -25,8 +30,21 @@ describe("private image storage", () => {
 
     expect(result).toEqual({
       id: "draft",
-      image_path: "owner/draft/photo.jpg",
       image_url: "https://signed.example/owner/draft/photo.jpg",
     });
+  });
+
+  it("signs only recommendation items backed by private storage", async () => {
+    const result = await attachSignedRecommendationImages(
+      [
+        { drinkName: "A", imagePath: "owner/checkin/a.jpg" },
+        { drinkName: "B", imageUrl: "https://seed.example/b.jpg" },
+      ],
+      async (path) => `https://signed.example/${path}`,
+    );
+    expect(result).toEqual([
+      { drinkName: "A", imageUrl: "https://signed.example/owner/checkin/a.jpg" },
+      { drinkName: "B", imageUrl: "https://seed.example/b.jpg" },
+    ]);
   });
 });
