@@ -1,15 +1,24 @@
 {
   "expo": {
-    "name": "mobile",
-    "slug": "mobile",
+    "name": "SipNotes",
+    "slug": "sipnotes",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "mobile",
+    "scheme": "sipnotes",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.anonymous.mobile"
+      "bundleIdentifier": "com.sipnotes.app",
+      "usesAppleSignIn": true,
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "infoPlist": {
+        "NSCameraUsageDescription": "SipNotes 使用相机拍摄饮品照片，用于创建打卡记录。",
+        "NSPhotoLibraryUsageDescription": "SipNotes 访问照片图库，以便选择饮品照片创建打卡记录。",
+        "NSLocationWhenInUseUsageDescription": "SipNotes 使用当前位置建议城市和区域，用于饮品打卡与地域推荐。"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -32,6 +41,21 @@
           "backgroundColor": "#208AEF",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
+        }
+      ],
+      "expo-secure-store",
+      "expo-apple-authentication",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "SipNotes 使用相机拍摄饮品照片，用于创建打卡记录。",
+          "photosPermission": "SipNotes 访问照片图库，以便选择饮品照片创建打卡记录。"
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "SipNotes 使用当前位置建议城市和区域，用于饮品打卡与地域推荐。"
         }
       ]
     ],

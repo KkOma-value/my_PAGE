@@ -6,6 +6,8 @@
     "dev": "next dev -p 5555",
     "build": "next build",
     "start": "next start -p 5555",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint",
     "db:push": "prisma db push",
     "db:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts",
@@ -14,6 +16,7 @@
   "dependencies": {
     "@amap/amap-jsapi-loader": "^1.0.1",
     "@prisma/client": "^5.0.0",
+    "@supabase/supabase-js": "^2.110.2",
     "lucide-react": "^1.23.0",
     "motion": "^12.42.2",
     "next": "16.2.10",
@@ -33,6 +36,7 @@
     "eslint-config-next": "16.2.10",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.10"
   }
 }
