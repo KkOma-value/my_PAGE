@@ -58,6 +58,7 @@ create table public.checkin_drafts (
 create table public.checkins (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references public.profiles(id) on delete cascade,
+  source_draft_id uuid not null unique,
   drink_name text not null check (char_length(drink_name) between 1 and 100),
   brand_name text not null check (char_length(brand_name) between 1 and 100),
   store_name text not null default '' check (char_length(store_name) <= 100),

@@ -60,10 +60,13 @@ export interface BrandWithDrinks extends BrandInfo {
 // ================================================================
 
 export interface CityInfo {
-  id: string;
+  id?: string;
   name: string;
   province: string;
   code: string;
+  displayName: string;
+  x: number;
+  y: number;
 }
 
 // ================================================================
@@ -231,5 +234,3 @@ export interface Badge {
   icon: string;
   color: string;
 }
-
-

@@ -31,18 +31,18 @@ export const PRESET_DRINK_IMAGES: Record<DrinkCategory, string[]> = {
 };
 
 export const CITIES: CityInfo[] = [
-  { name: "Shanghai", displayName: "上海", x: 70, y: 40 },
-  { name: "Beijing", displayName: "北京", x: 65, y: 30 },
-  { name: "Chengdu", displayName: "成都", x: 60, y: 60 },
-  { name: "Guangzhou", displayName: "广州", x: 68, y: 75 },
-  { name: "Shenzhen", displayName: "深圳", x: 67, y: 78 },
-  { name: "Hangzhou", displayName: "杭州", x: 70, y: 46 },
-  { name: "Suzhou", displayName: "苏州", x: 69, y: 43 },
-  { name: "Chongqing", displayName: "重庆", x: 52, y: 62 },
-  { name: "Xi'an", displayName: "西安", x: 48, y: 45 },
-  { name: "Wuhan", displayName: "武汉", x: 61, y: 52 },
-  { name: "Nanjing", displayName: "南京", x: 68, y: 41 },
-  { name: "Changsha", displayName: "长沙", x: 59, y: 61 }
+  { code: "shanghai", name: "Shanghai", province: "上海", displayName: "上海", x: 70, y: 40 },
+  { code: "beijing", name: "Beijing", province: "北京", displayName: "北京", x: 65, y: 30 },
+  { code: "chengdu", name: "Chengdu", province: "四川", displayName: "成都", x: 60, y: 60 },
+  { code: "guangzhou", name: "Guangzhou", province: "广东", displayName: "广州", x: 68, y: 75 },
+  { code: "shenzhen", name: "Shenzhen", province: "广东", displayName: "深圳", x: 67, y: 78 },
+  { code: "hangzhou", name: "Hangzhou", province: "浙江", displayName: "杭州", x: 70, y: 46 },
+  { code: "suzhou", name: "Suzhou", province: "江苏", displayName: "苏州", x: 69, y: 43 },
+  { code: "chongqing", name: "Chongqing", province: "重庆", displayName: "重庆", x: 52, y: 62 },
+  { code: "xian", name: "Xi'an", province: "陕西", displayName: "西安", x: 48, y: 45 },
+  { code: "wuhan", name: "Wuhan", province: "湖北", displayName: "武汉", x: 61, y: 52 },
+  { code: "nanjing", name: "Nanjing", province: "江苏", displayName: "南京", x: 68, y: 41 },
+  { code: "changsha", name: "Changsha", province: "湖南", displayName: "长沙", x: 59, y: 61 }
 ];
 
 export const INITIAL_SIPS: SipRecord[] = [
