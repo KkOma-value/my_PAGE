@@ -19,7 +19,7 @@ export async function POST(request: Request) {
       if (removal.error) return jsonError("ACCOUNT_IMAGE_DELETE_FAILED", removal.error.message, 500);
     }
 
-    const snapshots = await admin.from("recommendation_snapshots").delete().is("user_id", null);
+    const snapshots = await admin.from("recommendation_snapshots").delete().eq("user_id", userId);
     if (snapshots.error) return jsonError("SNAPSHOT_PURGE_FAILED", snapshots.error.message, 500);
     const revoked = await admin.auth.admin.signOut(accessToken, "global");
     if (revoked.error) return jsonError("SESSION_REVOKE_FAILED", revoked.error.message, 500);
